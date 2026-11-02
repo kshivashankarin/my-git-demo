@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from src.simple_llm_call import chatbot
+
 app = FastAPI()
 
 
@@ -13,7 +15,6 @@ class ChatbotResponse(BaseModel):
 @app.post('/my-chatbot')
 def my_chat_bot(request:ChatbotRequest):
 
-    return ChatbotResponse(response="Hello")
-    return {
-        "message" : "My Simple chatbot"
-    }
+    response = chatbot(request.message)
+
+    return ChatbotResponse(response=response)

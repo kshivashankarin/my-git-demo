@@ -13,18 +13,20 @@ client = OpenAI(
     api_key = key
 )
 
-history = []
+conversation = {}
 
-def chatbot(user_input):
+def chatbot(user_input, user_id):
 
-    print(history)
+    if user_id not in conversation:
+        conversation[user_id] = []
+
+    history = conversation[user_id]
 
     history.append({
         "role" : "user",
         "content" : user_input
     })
 
-    
     response = client.responses.create(
         model = 'gpt-5.4-mini',
         input = history
@@ -36,6 +38,8 @@ def chatbot(user_input):
         "role" : "assistant",
         "content" : res
     })
+
+    # print(conversation)
 
 
     return res

@@ -8,6 +8,7 @@ app = FastAPI()
 
 class ChatbotRequest(BaseModel):
     message: str
+    user_id: str
 
 class ChatbotResponse(BaseModel):
     response: str
@@ -15,6 +16,6 @@ class ChatbotResponse(BaseModel):
 @app.post('/my-chatbot')
 def my_chat_bot(request:ChatbotRequest):
 
-    response = chatbot(request.message)
+    response = chatbot(request.message, request.user_id)
 
     return ChatbotResponse(response=response)

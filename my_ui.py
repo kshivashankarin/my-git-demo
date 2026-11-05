@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 
@@ -36,30 +35,6 @@ st.markdown("""
         margin-bottom: 30px;
     }
 
-    .user-message {
-        background: #263449;
-        color: white;
-        padding: 14px 18px;
-        border-radius: 18px 18px 4px 18px;
-        margin: 12px 0 12px auto;
-        max-width: 75%;
-        width: fit-content;
-        font-size: 16px;
-        line-height: 1.6;
-    }
-
-    .bot-message {
-        background: #1c2330;
-        color: #e5e7eb;
-        padding: 14px 18px;
-        border-radius: 18px 18px 18px 4px;
-        margin: 12px auto 12px 0;
-        max-width: 85%;
-        width: fit-content;
-        font-size: 16px;
-        line-height: 1.7;
-    }
-
     .stChatInput {
         border-radius: 15px;
     }
@@ -91,6 +66,9 @@ API_URL = "http://127.0.0.1:8000/my-chatbot"
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if "user_id" not in st.session_state:
+    st.session_state.user_id = "user_123"
+
 
 # ---------------- SIDEBAR ----------------
 with st.sidebar:
@@ -107,10 +85,23 @@ with st.sidebar:
 
     st.divider()
 
+    # USER ID INPUT
+    st.markdown("### 👤 User Information")
+
+    st.session_state.user_id = st.text_input(
+        "Enter User ID",
+        value=st.session_state.user_id,
+        placeholder="Enter your user ID"
+    )
+
+    st.divider()
+
+    # NEW CHAT BUTTON
     if st.button("➕  New Chat", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
+    # CLEAR CONVERSATION BUTTON
     if st.button("🗑️  Clear Conversation", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
@@ -118,12 +109,14 @@ with st.sidebar:
     st.divider()
 
     st.markdown("### About")
+
     st.caption(
         "Your personal AI chatbot powered by "
         "FastAPI and a Large Language Model."
     )
 
     st.markdown("---")
+
     st.caption("Built with ❤️ using Streamlit")
 
 
@@ -175,23 +168,28 @@ for message in st.session_state.messages:
 
 
 # ---------------- CHAT INPUT ----------------
-user_input = st.chat_input("Message your AI assistant...")
+user_input = st.chat_input(
+    "Message your AI assistant...",
+    disabled=not st.session_state.user_id.strip()
+)
 
 
 # ---------------- HANDLE USER MESSAGE ----------------
 if user_input:
 
-    # Save user message
+    user_id = st.session_state.user_id.strip()
+
+    # SAVE USER MESSAGE
     st.session_state.messages.append({
         "role": "user",
         "content": user_input
     })
 
-    # Display user message
+    # DISPLAY USER MESSAGE
     with st.chat_message("user", avatar="👤"):
         st.markdown(user_input)
 
-    # Get chatbot response
+    # GET CHATBOT RESPONSE
     with st.chat_message("assistant", avatar="🤖"):
 
         with st.spinner("AI is thinking..."):
@@ -200,7 +198,10 @@ if user_input:
 
                 response = requests.post(
                     API_URL,
-                    json={"message": user_input},
+                    json={
+                        "message": user_input,
+                        "user_id": user_id
+                    },
                     timeout=120
                 )
 
@@ -209,27 +210,31 @@ if user_input:
                 bot_response = response.json()["response"]
 
             except requests.exceptions.ConnectionError:
+
                 bot_response = (
                     "⚠️ Cannot connect to the FastAPI server. "
                     "Please make sure your backend is running."
                 )
 
             except requests.exceptions.Timeout:
+
                 bot_response = (
                     "⏳ The request timed out. Please try again."
                 )
 
             except requests.exceptions.RequestException as e:
+
                 bot_response = f"⚠️ API Error: {str(e)}"
 
             except (ValueError, KeyError):
+
                 bot_response = (
                     "⚠️ Invalid response received from the backend."
                 )
 
         st.markdown(bot_response)
 
-    # Save bot response
+    # SAVE BOT RESPONSE
     st.session_state.messages.append({
         "role": "assistant",
         "content": bot_response
